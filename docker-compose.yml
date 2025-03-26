@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: telegram
+    volumes:
+      - ./db:/app/db
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  whatsapp-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: whatsapp
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./db:/app/db
+    env_file:
+      - .env
+    restart: unless-stopped

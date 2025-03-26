@@ -12,6 +12,36 @@ This project provides a personal assistant agent that manages tasks related to y
 
 The personal assistant is a **hierarchical multi-agents** system with a **supervisor agent** (manager) and several sub-agents that handle specific tasks and tools for efficient task management.
 
+## Quick Start with Docker
+
+The easiest way to get started is using Docker:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ABoringBusiness/personal-ai-assistant.git
+   cd personal-ai-assistant
+   ```
+
+2. Create a `.env` file with your API keys and configuration:
+   ```bash
+   cp .env.example .env
+   # Edit the .env file with your API keys and configuration
+   ```
+
+3. Build and run the Docker containers:
+   ```bash
+   # Build the Docker images
+   ./docker-build.sh
+   
+   # Run the Telegram bot
+   docker-compose up -d telegram-bot
+   
+   # Or run the WhatsApp bot
+   docker-compose up -d whatsapp-bot
+   ```
+
+For more details on the Docker setup, see [DOCKER_README.md](DOCKER_README.md).
+
 ## Overview
 
 ### Main Agent: Assistant Manager
