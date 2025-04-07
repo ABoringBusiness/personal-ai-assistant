@@ -17,7 +17,7 @@ app = FastAPI()
 conn = sqlite3.connect("db/checkpoints.sqlite", check_same_thread=False)
 
 # Initiate personal assistant instance
-personal_assistant = PersonalAssistant()
+personal_assistant = PersonalAssistant(conn)
 
 # Configuration for the Langgraph agent, specifying thread ID
 config = {"configurable": {"thread_id": "1"}}

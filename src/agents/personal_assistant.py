@@ -7,9 +7,13 @@ from src.tools.notion import *
 from src.tools.slack import *
 from src.tools.research import *
 from src.utils import get_current_date_time
+import sqlite3
 
 class PersonalAssistant:
     def __init__(self, db_connection):
+        # Store db connection
+        self.db_connection = db_connection
+        
         # Create sqlite checkpointer for managing manager memory
         self.checkpointer = SqliteSaver(db_connection)
         
@@ -94,6 +98,44 @@ class PersonalAssistant:
                 self.researcher_agent
             ]
         )
+
+    def clear_state(self):
+        """Clear all stored state from the database"""
+        try:
+            print("Completely clearing database state...")
+            # Get a cursor for the database
+            cursor = self.db_connection.cursor()
+            
+            # Drop all tables in the database to completely clear the state
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = cursor.fetchall()
+            
+            for table in tables:
+                cursor.execute(f"DROP TABLE IF EXISTS {table[0]}")
+            
+            # Commit the changes
+            self.db_connection.commit()
+            
+            # Reinitialize the checkpointer after clearing the database
+            self.checkpointer = SqliteSaver(self.db_connection)
+            
+            # Reinitialize the manager agent with the new checkpointer
+            self.manager_agent.memory = self.checkpointer
+            self.manager_agent.agent = None
+            self.manager_agent.initiat_agent()
+            
+            print("Database state cleared successfully")
+        except Exception as e:
+            print(f"Error clearing database state: {e}")
+
+    def invoke(self, message, **kwargs):
+        """Invoke the personal assistant with a fresh state"""
+        # Clear any existing state before processing
+        self.clear_state()
+        
+        # Now invoke with a fresh state
+        print("Invoking assistant with fresh state...")
+        return self.assistant_orchestrator.invoke(message, **kwargs)
 
     def __getattr__(self, name):
         return getattr(self.assistant_orchestrator, name)

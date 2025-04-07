@@ -2,55 +2,43 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for Selenium
+# Install build dependencies and runtime dependencies
 RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    unzip \
-    xvfb \
-    libxi6 \
-    libgconf-2-4 \
+    build-essential \
+    sqlite3 \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chrome for Selenium
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better caching
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create the db directory
-RUN mkdir -p /app/db
-
-# Copy the application code
+# Copy the rest of the application code
 COPY . .
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
+# Create directory for SQLite database
+RUN mkdir -p /app/db
 
-# Expose port for WhatsApp webhook
-EXPOSE 5000
-
-# Create an entrypoint script
+# Script for handling OAuth flow
 RUN echo '#!/bin/bash\n\
-if [ "$1" = "telegram" ]; then\n\
-    python app.py\n\
-elif [ "$1" = "whatsapp" ]; then\n\
-    python app_whatsapp.py\n\
-else\n\
-    echo "Please specify which app to run: telegram or whatsapp"\n\
-    exit 1\n\
-fi' > /app/entrypoint.sh \
-    && chmod +x /app/entrypoint.sh
+echo "Checking if credentials.json exists..."\n\
+if [ ! -f "/app/credentials.json" ]; then\n\
+  echo "ERROR: credentials.json not found. Please place your Google OAuth credentials in the project directory."\n\
+  exit 1\n\
+fi\n\
+\n\
+echo "Starting AI Personal Assistant..."\n\
+exec python app.py\n\
+' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-# Set the entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Define environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-# Default command (can be overridden)
-CMD ["telegram"]
+# Create a non-root user to run the application
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Use the entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"] 

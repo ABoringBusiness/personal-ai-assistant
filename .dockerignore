@@ -1,12 +1,16 @@
+# Git
 .git
 .gitignore
-.env
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -21,8 +25,32 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Sensitive data files (will be mounted as volumes)
+token.json
+credentials.json
+
+# Database
+db/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README*.md
+LICENSE
+
+# Miscellaneous
 .DS_Store
 .idea/
 .vscode/
 *.swp
 *.swo
+*.zip 
